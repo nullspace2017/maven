@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+						http://www.springframework.org/schema/beans/spring-beans.xsd
+						http://www.springframework.org/schema/context
+						http://www.springframework.org/schema/context/spring-context.xsd
+						http://www.springframework.org/schema/aop
+						http://www.springframework.org/schema/aop/spring-aop.xsd
+						http://www.springframework.org/schema/tx 
+						http://www.springframework.org/schema/tx/spring-tx.xsd">
+    <!-- 创建SessionFactory，这是spring整合hibernate的核心，也正是用SessionFactory加载hibernate的配置文件 -->
+    <bean id="sessionFactory" class="org.springframework.orm.hibernate3.LocalSessionFactoryBean">
+    	<property name="configLocation">
+    		<value>
+    			classpath:hibernate.cfg.xml
+    		</value>
+    	</property>
+    </bean>
+    
+    <!-- 创建hibernate的模板 -->
+    <bean id="hibernateTemplate" class="org.springframework.orm.hibernate3.HibernateTemplate">
+    	<property name="sessionFactory" ref="sessionFactory"></property>
+    </bean>
+    
+    <!-- 配置事务管理器，声明式事务处理XML begin -->
+    <!-- 定义切面，切面即事务，定义hibernate的事务管理器 -->
+    <bean id="trManager" class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+    	<property name="sessionFactory" ref="sessionFactory"></property>
+    </bean>
+    <!-- 定义通知，关联切面 -->
+    <tx:advice id="trManagerAdvice" transaction-manager="trManager">
+    	<tx:attributes>
+    		<tx:method name="save*" isolation="DEFAULT" propagation="REQUIRED" read-only="false"/>
+    		<tx:method name="update*" isolation="DEFAULT" propagation="REQUIRED" read-only="false"/>
+    		<tx:method name="delete*" isolation="DEFAULT" propagation="REQUIRED" read-only="false"/>
+    		<tx:method name="*" read-only="true"/>
+    	</tx:attributes>
+    </tx:advice>
+    <!-- 定义切入点，同时让切入点关联通知（换句话说，就是让业务层关联事务） -->
+    <aop:config>
+    	<aop:pointcut expression="execution(* cn.itcast.maven.service..*.*(..))" id="servicePointCut"/>
+    	<aop:advisor advice-ref="trManagerAdvice" pointcut-ref="servicePointCut"/>
+    </aop:config>
+    
+    <!-- 配置事务管理器，声明式事务处理XML end -->
+    
+    <!-- 创建Action类，由于struts2的模式是多实例多线程，要求每次访问Action，都会创建一个新的实例，这样保证sturts2提供的值栈多实例
+    	所有要求创建Action类的时候，同时设置对象的创建为多实例，这样才能保证Struts2的值栈没有问题
+     -->
+    <bean id="personAction" class="cn.itcast.maven.web.action.PersonAction" scope="prototype">
+    	<property name="personService" ref="personService"></property>
+    </bean>
+    <!-- 创建Service层对象 -->
+    <bean id="personService" class="cn.itcast.maven.service.impl.PersonServiceImpl">
+    	<property name="personDao" ref="personDao"></property>
+    </bean>
+    <!-- 创建DAO层对象 -->
+    <bean id="personDao" class="cn.itcast.maven.dao.impl.PersonDaoImpl">
+    	<property name="hibernateTemplate" ref="hibernateTemplate"></property>
+    </bean>
+</beans>

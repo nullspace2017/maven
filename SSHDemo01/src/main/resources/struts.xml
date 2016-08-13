@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+	"-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+	"http://struts.apache.org/dtds/struts-2.3.dtd">
+<struts>
+	<!-- 设置struts2的模式为开发模式，优势在开发过程中，可以将错误信息显示到控制台上，还有自动加载struts的配置文件和资源文件 -->
+	<constant name="struts.devMode" value="true"></constant>
+	<!-- 设置页面的UI主题为simple，这样可以去掉struts2提供的样式，由美工添加 -->
+	<constant name="struts.ui.theme" value="simple"></constant>
+	<package name="person" namespace="/person" extends="struts-default">
+		<!-- 配置访问的URL跳转的Action类和对应的返回页面 -->
+		<action name="personAction_*" class="personAction" method="{1}">
+			<result name="success">/success.jsp</result>
+		</action>
+	</package>
+</struts>
